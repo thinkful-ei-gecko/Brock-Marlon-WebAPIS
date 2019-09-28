@@ -52,16 +52,84 @@ app.get('/sum', (req, res) => {
 
 });
 
+function shiftCipher(text, shift) {
+  let cipherArr;
+  text.forEach(char => {
+    cipherArr.push(char.charCodeAt(0)+shift);
+  });
+}
 
 app.get('/cipher', (req, res) => {
 
-  const text = req.query.text;
-  const shift = req.query.shift;
+  const {text, shift} = req.query;
+  let intShift = parseInt(shift);
+
+  if(!text) {
+    res
+      .status(400)
+      .send('Text is a required input');
+  }
+
+  if(!shift || isNaN(intShift) || intShift > 26) {
+    res
+      .status(400)
+      .send('Shift is required to generate the code');
+  }
+
+  const shiftCipher = (text, shift) => {
+    let cipherArr = text.toUpperCase().split('');
+    let charCodes = [];
+    cipherArr.forEach(char => {
+      if(char.charCodeAt(0) + shift > 90){
+        let charOver = char.charCodeAt(0) + shift - 90 + 64;
+        charCodes.push(charOver);
+      }
+      else{
+        charCodes.push(char.charCodeAt(0)+shift);
+      }
+    });
   
-  const cipher = text.split('').map(char => {
-    
+    return charCodes.map(charCode => String.fromCharCode(charCode)).join('').toUpperCase();
+  };
+ 
+  res.json(shiftCipher(text, intShift));
+  
 
-  });
 
+});
+
+
+app.get('/lotto', (req, res) => {
+  const {numbers} = req.query;
+  let winningNums = [];
+  let lottoFeedback = '';
+
+  if(!numbers || !Array.isArray(numbers)){
+    res
+      .status(400)
+      .send('Please enter an array of numbers');
+  }
+
+  for (let i = 0; i < 6; i++){
+    winningNums.push(Math.floor(Math.random() * 20 + 1));
+  }
+
+  let inputNums = numbers.map(num => parseInt(num));
+  let matchingNums = winningNums.filter(num => inputNums.includes(num));
+
+  if(matchingNums.length < 4){
+    lottoFeedback = ' Sorry you lose';
+  }
+  else if(matchingNums.length === 4){
+    lottoFeedback = 'Congratulations, you win a free ticket!';
+  }
+  else if(matchingNums.length === 5){
+    lottoFeedback = 'Congratulations, you win a free ticket!';
+  }
+  else if(matchingNums.length === 6){
+    lottoFeedback = 'Wow! Unbelievable! You could have won the mega millions!';
+  }
+  
+  res.json(lottoFeedback);
 
 });
